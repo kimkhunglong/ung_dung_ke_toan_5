@@ -1,0 +1,47 @@
+{
+  "name": "accounting-pro",
+  "version": "1.0.0",
+  "description": "Phần mềm Kế toán Doanh nghiệp Offline",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "rebuild": "electron-rebuild -f -w better-sqlite3 -w bcrypt"
+  },
+  "author": "Senior Architect",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "exceljs": "^4.4.0",
+    "pdfkit": "^0.14.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.2.0",
+    "electron": "^29.4.6",
+    "electron-builder": "^26.15.3",
+    "node-gyp": "^13.0.1"
+  },
+  "build": {
+    "appId": "com.accounting.pro",
+    "productName": "Accounting Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "keywords": [],
+  "type": "commonjs"
+}

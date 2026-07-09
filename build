@@ -1,0 +1,25 @@
+"build": {
+    "appId": "com.ketoanpro.app",
+    "productName": "SoKetoanPro",
+    "directories": {
+      "output": "dist"
+    },
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sổ Kế Toán Pro"
+    }
+  }

@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Điều Hành & Kiểm Soát công việc kế toán - Bản 5.0 PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-200">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col justify-between hidden md:flex z-20 relative">
+            <div>
+                <div class="p-6 border-b border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-primary-600 text-white rounded-lg shadow-md">
+                            <i data-lucide="building-2" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-sm leading-none text-slate-900 dark:text-white">QUẢN LÝ CÔNG VIỆC 5.0</h1>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Hệ thống Nghiệp vụ Quản trị</span>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors bg-primary-50 text-emerald-700 dark:bg-primary-900/30 dark:text-primary-400">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Bảng điều khiển
+                    </button>
+                    <button onclick="switchTab('tasks')" id="btn-tasks" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="receipt" class="w-5 h-5"></i> Sổ tay nghiệp vụ
+                    </button>
+                    <button onclick="switchTab('companies')" id="btn-companies" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="kanban" class="w-5 h-5"></i> Hạng mục theo Công ty
+                    </button>
+                    <button onclick="switchTab('settings')" id="btn-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <i data-lucide="settings" class="w-5 h-5"></i> Cấu hình & Dữ liệu
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span class="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Offline Local Database
+                    </span>
+                    <button onclick="toggleDarkMode()" class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                        <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-600"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col overflow-hidden relative z-10">
+            <!-- HEADER -->
+            <header class="h-16 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                        <i data-lucide="calendar" class="w-4 h-4 text-primary-600"></i>
+                        <span id="live-time">Đang tải thời gian...</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="exportData()" class="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all">
+                        <i data-lucide="download" class="w-4 h-4"></i> <span>Xuất Bản Sao (.json)</span>
+                    </button>
+                    <label class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-all">
+                        <i data-lucide="upload" class="w-4 h-4"></i> <span>Nhập Dữ Liệu</span>
+                        <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                    </label>
+
+                    <button onclick="openQuickTaskModal()" class="flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold shadow-md transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i> <span>Tạo hồ sơ mới</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- PAGES CONTAINER -->
+            <main class="flex-1 overflow-y-auto p-6" id="pages-container">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <section id="tab-dashboard" class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Bảng thống kê điều hành giải ngân</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Toàn bộ dữ liệu dưới đây được bảo mật và lưu trữ độc lập tại trình duyệt máy tính cá nhân.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-emerald-500/10 text-emerald-600 rounded-xl"><i data-lucide="wallet" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase">Tổng giá trị đang theo dõi</p>
+                                <h3 class="text-xl font-extrabold mt-0.5 text-emerald-600" id="stat-total-amount">0 ₫</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-blue-500/10 text-blue-600 rounded-xl"><i data-lucide="files" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase">Tổng số lượng đầu việc</p>
+                                <h3 class="text-2xl font-bold mt-0.5" id="stat-total-tasks">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-amber-500/10 text-amber-600 rounded-xl"><i data-lucide="hourglass" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase">Hồ sơ chờ xử lý / nợ thuế</p>
+                                <h3 class="text-2xl font-bold mt-0.5 text-amber-600" id="stat-pending-tasks">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                            <div class="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl"><i data-lucide="check-square" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase">Hồ sơ đã hoàn tất</p>
+                                <h3 class="text-2xl font-bold mt-0.5 text-indigo-600" id="stat-completed-tasks">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-bold text-sm uppercase text-slate-400">Tỷ lệ hoàn thành công việc chung</h3>
+                                    <span class="text-primary-600 font-extrabold" id="progress-percentage">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden mb-4">
+                                    <div id="progress-bar" class="bg-gradient-to-r from-primary-500 to-emerald-500 h-full transition-all duration-500" style="width: 0%;"></div>
+                                </div>
+                                <h4 class="font-bold border-t pt-4 mt-4 flex items-center gap-2 text-rose-500 text-xs uppercase tracking-wider">
+                                    <i data-lucide="alert-circle" class="w-4 h-4"></i> Đầu việc khẩn cấp cần kiểm soát
+                                </h4>
+                                <div id="dashboard-urgent-tasks" class="space-y-2 mt-3"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-[350px]">
+                            <h3 class="font-bold border-b pb-3 mb-4 text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                <i data-lucide="building" class="w-4 h-4 text-indigo-500"></i> Tiến độ công việc theo Đơn vị
+                            </h3>
+                            <div id="dashboard-projects-progress" class="flex-1 overflow-y-auto space-y-3"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: TASKS MANGEMENT -->
+                <section id="tab-tasks" class="space-y-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 px-6 py-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex flex-wrap items-center gap-6 text-sm text-slate-600 dark:text-slate-300 font-medium" id="task-filter-group">
+                            <button onclick="setTaskFilter('all')" data-filter="all" class="flex items-center gap-2 py-1.5 px-3 rounded-md transition-all bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 font-semibold">
+                                Tất cả hồ sơ <span id="count-all" class="bg-emerald-200/60 dark:bg-emerald-800 px-1.5 py-0.5 rounded text-xs text-emerald-800 dark:text-emerald-200 font-bold ml-0.5">0</span>
+                            </button>
+                            <button onclick="setTaskFilter('pending')" data-filter="pending" class="flex items-center gap-2 py-1.5 px-3 rounded-md transition-all hover:text-slate-900 dark:hover:text-white">
+                                Đang chờ xử lý <span id="count-pending" class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-600 dark:text-slate-400 font-bold ml-0.5">0</span>
+                            </button>
+                            <button onclick="setTaskFilter('completed')" data-filter="completed" class="flex items-center gap-2 py-1.5 px-3 rounded-md transition-all hover:text-slate-900 dark:hover:text-white">
+                                Đã xong <span id="count-completed" class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-600 dark:text-slate-400 font-bold ml-0.5">0</span>
+                            </button>
+                            <button onclick="setTaskFilter('urgent')" data-filter="urgent" class="flex items-center gap-2 py-1.5 px-3 rounded-md transition-all hover:text-slate-900 dark:hover:text-white">
+                                Mức độ khẩn cấp <span id="count-urgent" class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-600 dark:text-slate-400 font-bold ml-0.5">0</span>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center flex-1 md:flex-none justify-end gap-3">
+                            <div class="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 gap-1 shrink-0">
+                                <button onclick="setTaskViewMode('grid')" id="btn-view-grid" class="p-1.5 rounded-lg transition-all bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" title="Hiển thị dạng lưới">
+                                    <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="setTaskViewMode('list')" id="btn-view-list" class="p-1.5 rounded-lg transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="Hiển thị dạng danh sách">
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+
+                            <div class="relative flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
+                                <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400 mr-1.5"></i>
+                                <select id="task-sort-select" onchange="smartRender()" class="bg-transparent border-none text-xs font-medium text-slate-600 dark:text-slate-300 focus:outline-none cursor-pointer pr-1">
+                                    <option value="date-desc">Hạn xử lý: Mới nhất</option>
+                                    <option value="date-asc">Hạn xử lý: Cũ nhất</option>
+                                </select>
+                            </div>
+
+                            <div class="relative w-full sm:w-64">
+                                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" id="task-search-input" oninput="smartRender()" placeholder="Tìm tên hồ sơ, nhà thầu..." class="w-full pl-9 pr-4 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:border-primary-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="tasks-list"></div>
+                </section>
+
+                <!-- TAB 3: COMPANIES AND CATEGORIES MANAGEMENT -->
+                <section id="tab-companies" class="space-y-6 hidden">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Hạng mục nghiệp vụ theo từng Công ty</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Bấm vào từng hạng mục để xem chi tiết danh sách đầu việc cần xử lý ở phía dưới.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2.5 border-b border-slate-200 dark:border-slate-700 pb-3" id="company-tab-list"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="company-categories-board"></div>
+
+                    <div id="company-tasks-panel" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                            <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+                                Chi tiết công việc: <span id="selected-cat-name-title" class="text-emerald-600 underline">Chọn một hạng mục nghiệp vụ</span>
+                            </h3>
+                            <span id="selected-cat-count" class="text-xs bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg text-slate-500 font-semibold">0 công việc</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="company-tasks-list">
+                            <div class="col-span-full text-center text-slate-400 py-6 text-xs italic">Vui lòng bấm chọn một hạng mục ở lưới phía trên để tra cứu hồ sơ.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: SYSTEM SETTINGS -->
+                <section id="tab-settings" class="space-y-6 hidden">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Cấu hình danh mục & tệp dữ liệu</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Thiết lập hệ thống công ty chủ quản, phân loại hạng mục kiểm toán và sao lưu cơ sở dữ liệu.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                        <!-- Left configuration column -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                    <i data-lucide="building" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Danh sách Công ty / Dự án</h3>
+                                    <p class="text-slate-400 text-[11px]">Các pháp nhân quản lý độc lập.</p>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5 pt-2">
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tên doanh nghiệp mới</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="cfg-company-input" onkeydown="if(event.key === 'Enter') addCompanyConfig()" placeholder="Ví dụ: Công ty TNHH Nam An" class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                                    <button onclick="addCompanyConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center shrink-0">Thêm</button>
+                                </div>
+                            </div>
+                            <div id="cfg-companies-list" class="space-y-2 pt-2"></div>
+                        </div>
+
+                        <!-- Right configuration column -->
+                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 text-amber-50 dark:text-amber-400 rounded-xl">
+                                    <i data-lucide="sliders" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Cấu hình Hạng mục Kế toán</h3>
+                                    <p class="text-slate-400 text-[11px]">Thiết lập các giai đoạn/hạng mục của: <span id="cfg-selected-company-title" class="font-bold text-slate-600 dark:text-slate-300 uppercase">...</span></p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2">
+                                <div class="md:col-span-4 space-y-1.5">
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Chọn Công ty cấu hình</label>
+                                    <select id="cfg-company-select" onchange="onConfigCompanyChange()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:border-amber-500 cursor-pointer"></select>
+                                </div>
+                                <div class="md:col-span-8 space-y-1.5">
+                                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tên nhóm hạng mục / nghiệp vụ mới</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="cfg-category-input" onkeydown="if(event.key === 'Enter') addCategoryConfig()" placeholder="Ví dụ: Tạm ứng, Thanh toán đợt thầu..." class="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-amber-500">
+                                        <button onclick="addCategoryConfig()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center shrink-0">Thêm Hạng mục</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="cfg-categories-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4"></div>
+                        </div>
+                    </div>
+
+                    <!-- Backup / Restore footer -->
+                    <div class="bg-slate-100/70 dark:bg-slate-800/40 p-4 rounded-xl border border-dashed flex flex-wrap items-center justify-between gap-4">
+                        <div class="text-xs text-slate-500">
+                            <span class="font-bold text-slate-700 dark:text-slate-300">Sao lưu hệ thống:</span> Nên xuất định kỳ một bản sao sao lưu để tránh mất dữ liệu duyệt web.
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="exportData()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">Tải bản sao (.json)</button>
+                            <button onclick="resetToDefaultData()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">Đặt lại từ đầu</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- TASK DETAIL FORM MODAL (POPUP) -->
+    <div id="task-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden text-sm animate-in fade-in zoom-in duration-200">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ghi nhận hồ sơ nghiệp vụ mới</h3>
+                <button onclick="closeQuickTaskModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+            </div>
+
+            <form id="task-form" onsubmit="saveTaskData(event)" class="p-6 space-y-4">
+                <input type="hidden" id="form-task-id" value="">
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nghiệp vụ / Nội dung thanh toán</label>
+                    <input type="text" id="form-title" required placeholder="Ví dụ: Tạm ứng đợt 2 gói thầu cọc móng..." class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Thuộc Công ty / Chủ đầu tư</label>
+                        <select id="form-company" onchange="updateFormCategories()" class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Thuộc Hạng mục nghiệp vụ</label>
+                        <select id="form-category" class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Giá trị giao dịch (VNĐ)</label>
+                        <input type="number" id="form-amount" placeholder="Nhập số tiền..." class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Trạng thái hồ sơ chứng từ</label>
+                        <select id="form-invoice" class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                            <option value="Chưa có Hóa đơn / Tờ trình">Chưa có Hóa đơn / Tờ trình</option>
+                            <option value="Đã có đủ Hóa đơn">Đã có đủ Hóa đơn</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mức độ khẩn cấp hồ sơ</label>
+                        <select id="form-priority" class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                            <option value="Trung bình">Hạn mức thường (Trung bình)</option>
+                            <option value="Cao">Khẩn cấp (Cao)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tình trạng hoàn thành việc</label>
+                        <select id="form-status" class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                            <option value="pending">Chưa xử lý (Chờ làm)</option>
+                            <option value="completed">Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nhà thầu / Người thụ hưởng</label>
+                        <input type="text" id="form-contractor" placeholder="Ví dụ: Công ty An Phong..." class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Hạn thanh toán</label>
+                        <input type="date" id="form-date" required class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">Chi tiết hồ sơ / Ghi chú</label>
+                    <textarea id="form-notes" placeholder="Số Hợp đồng, điều khoản thanh toán, ghi chú quan trọng..." class="w-full p-2.5 border rounded-xl dark:bg-slate-900 border-slate-300 dark:border-slate-600 h-24"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                    <button type="button" onclick="closeQuickTaskModal()" class="px-6 py-2.5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-all">Hủy</button>
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">Xác nhận lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CORE JAVASCRIPT SYSTEM LOGIC -->
+    <script>
+        const defaultData = {
+            companies: [
+                { id: "comp-1", name: "CÔNG TY DẠ HỢP" },
+                { id: "comp-2", name: "CÔNG TY HỢP LONG" }
+            ],
+            categories: [
+                { id: "cat-1", name: "Sổ sách kế toán", companyId: "comp-1" },
+                { id: "cat-2", name: "Báo cáo quản trị", companyId: "comp-1" },
+                { id: "cat-3", name: "Công nợ", companyId: "comp-1" },
+                { id: "cat-4", name: "Tiền lương (TĐ)", companyId: "comp-1" },
+                { id: "cat-5", name: "Kiểm soát (DHE)", companyId: "comp-1" },
+                { id: "cat-6", name: "Báo cáo thuế (Dạ Hợp)", companyId: "comp-1" },
+                { id: "cat-7", name: "Công việc khác (DH)", companyId: "comp-1" },
+                { id: "cat-8", name: "Hồ sơ Pháp lý & Thuế", companyId: "comp-2" }
+            ],
+            tasks: [
+                { id: "task-1", title: "Kiểm tra sổ sách kế toán tháng trước Dạ Hợp", companyId: "comp-1", categoryId: "cat-1", amount: 15000000, priority: "Trung bình", dueDate: "2026-07-25", invoiceStatus: "Đã có đủ Hóa đơn", contractor: "Công ty An Phong", notes: "Xem lại các chứng từ phát sinh đầu tháng.", status: "pending", subtasks: [
+                    { id: "sub-mock-1", text: "Thu thập chứng từ đầu vào", dueDate: "2026-07-01", completed: false },
+                    { id: "sub-mock-2", text: "Đối chiếu công nợ nhà thầu phụ", dueDate: "2026-07-20", completed: false }
+                ] },
+                { id: "task-2", title: "Rà soát báo cáo quản trị quý 2", companyId: "comp-1", categoryId: "cat-2", amount: 45000000, priority: "Cao", dueDate: "2026-06-30", invoiceStatus: "Chưa có Hóa đơn / Tờ trình", contractor: "Công ty Dạ Hợp", notes: "Báo cáo nội bộ cho Ban Giám Đốc.", status: "pending", subtasks: [] }
+            ]
+        };
+
+        let state = JSON.parse(localStorage.getItem('HL_PORTABLE_STATE')) || JSON.parse(JSON.stringify(defaultData));
+        let currentFilter = 'all';
+        let taskViewMode = 'grid'; 
+        let selectedCompanyId = state.companies[0]?.id || '';
+        let configSelectedCompanyId = state.companies[0]?.id || '';
+        let selectedCategoryId = '';
+        let activeTab = 'dashboard';
+
+        // Quản lý trạng thái sửa việc con inline
+        let editingSubtaskTaskId = null;
+        let editingSubtaskId = null;
+
+        function saveToLocalStorage() {
+            localStorage.setItem('HL_PORTABLE_STATE', JSON.stringify(state));
+        }
+
+        // ĐỊNH DẠNG NGÀY THÁNG CỐ ĐỊNH (DD/MM/YYYY)
+        function formatDateVN(dateStr) {
+            if (!dateStr) return 'Chưa thiết lập';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        // HÀM KIỂM TRA QUÁ HẠN THỜI GIAN THỰC (Mốc 2026)
+        function isOverdue(dateStr, isCompleted) {
+            if (!dateStr || isCompleted) return false;
+            const today = new Date('2026-07-09'); // Theo mốc thời gian thực hiện tại của hệ thống
+            const targetDate = new Date(dateStr);
+            today.setHours(0,0,0,0);
+            targetDate.setHours(0,0,0,0);
+            return targetDate < today;
+        }
+
+        function initClock() {
+            const timeEl = document.getElementById('live-time');
+            const update = () => {
+                const now = new Date();
+                timeEl.innerText = now.toLocaleTimeString('vi-VN') + " - " + now.toLocaleDateString('vi-VN');
+            }
+            setInterval(update, 1000); update();
+        }
+        initClock();
+
+        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('#pages-container > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors";
+            });
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if(activeBtn) activeBtn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-primary-50 text-emerald-700 dark:bg-primary-900/30 dark:text-primary-400";
+            
+            smartRender();
+        }
+
+        function updateGlobalData() {
+            document.getElementById('count-all').innerText = state.tasks.length;
+            document.getElementById('count-pending').innerText = state.tasks.filter(t => t.status === 'pending').length;
+            document.getElementById('count-completed').innerText = state.tasks.filter(t => t.status === 'completed').length;
+            document.getElementById('count-urgent').innerText = state.tasks.filter(t => t.priority === 'Cao' && t.status === 'pending').length;
+        }
+
+        function setTaskViewMode(mode) {
+            taskViewMode = mode;
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnList = document.getElementById('btn-view-list');
+            if(!btnGrid || !btnList) return;
+            
+            if (mode === 'grid') {
+                btnGrid.className = "p-1.5 rounded-lg transition-all bg-white dark:bg-slate-800 text-emerald-600 shadow-sm";
+                btnList.className = "p-1.5 rounded-lg transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200";
+            } else {
+                btnGrid.className = "p-1.5 rounded-lg transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200";
+                btnList.className = "p-1.5 rounded-lg transition-all bg-white dark:bg-slate-800 text-emerald-600 shadow-sm";
+            }
+            smartRender();
+        }
+
+        // QUẢN LÝ CÔNG VIỆC CON (SUBTASKS) CHUYÊN SÂU
+        function addSubTask(taskId) {
+            const input = document.getElementById(`subtask-input-${taskId}`);
+            const dateInput = document.getElementById(`subtask-date-${taskId}`);
+            const text = input ? input.value.trim() : '';
+            const dueDate = dateInput ? dateInput.value : '';
+            
+            if (!text || !dueDate) {
+                alert("Vui lòng điền trọn vẹn Tên việc con và Hạn xử lý!");
+                return;
+            }
+
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.subtasks = task.subtasks || [];
+                task.subtasks.push({ 
+                    id: 'sub-' + Date.now(), 
+                    text: text, 
+                    dueDate: dueDate, 
+                    completed: false 
+                });
+                saveToLocalStorage();
+                if(input) input.value = '';
+                if(dateInput) dateInput.value = '';
+                smartRender();
+            }
+        }
+
+        function handleToggleSubtask(taskId, subtaskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task && task.subtasks) {
+                const sub = task.subtasks.find(s => s.id === subtaskId);
+                if (sub) { sub.completed = !sub.completed; saveToLocalStorage(); smartRender(); }
+            }
+        }
+
+        // Kích hoạt khu vực sửa đổi Inline không chặn màn hình
+        function startEditSubtask(taskId, subtaskId) {
+            editingSubtaskTaskId = taskId;
+            editingSubtaskId = subtaskId;
+            smartRender();
+        }
+
+        function cancelInlineSubtask() {
+            editingSubtaskTaskId = null;
+            editingSubtaskId = null;
+            smartRender();
+        }
+
+        function saveInlineSubtask(taskId, subtaskId) {
+            const txtInp = document.getElementById(`edit-subtext-${subtaskId}`);
+            const dateInp = document.getElementById(`edit-subdate-${subtaskId}`);
+            if (!txtInp || !dateInp) return;
+
+            const text = txtInp.value.trim();
+            const dueDate = dateInp.value;
+
+            if (!text || !dueDate) {
+                alert("Nội dung và Ngày tháng hạn xử lý của việc con không được để trống!");
+                return;
+            }
+
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task && task.subtasks) {
+                const sub = task.subtasks.find(s => s.id === subtaskId);
+                if (sub) {
+                    sub.text = text;
+                    sub.dueDate = dueDate;
+                    saveToLocalStorage();
+                    cancelInlineSubtask();
+                }
+            }
+        }
+
+        function handleDeleteSubtask(taskId, subtaskId) {
+            if (confirm('Xóa công việc con này khỏi hồ sơ?')) {
+                const task = state.tasks.find(t => t.id === taskId);
+                if (task && task.subtasks) {
+                    task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+                    saveToLocalStorage();
+                    smartRender();
+                }
+            }
+        }
+
+        function getSubtaskHTMLBlock(t) {
+            t.subtasks = t.subtasks || [];
+            const total = t.subtasks.length;
+            const done = t.subtasks.filter(s => s.completed).length;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            let html = `
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/60 space-y-2">
+                    <div class="flex justify-between items-center text-[11px] font-semibold text-slate-500">
+                        <span class="flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-primary-600"></i> Các bước thực hiện (${done}/${total})</span>
+                        <span>${pct}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 h-1 rounded-full overflow-hidden">
+                        <div class="bg-primary-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1 my-1">
+            `;
+
+            if (total === 0) {
+                html += `<p class="text-[11px] text-slate-400 italic py-0.5">Chưa tạo danh mục việc con.</p>`;
+            } else {
+                html += t.subtasks.map(s => {
+                    const overdue = isOverdue(s.dueDate, s.completed);
+                    
+                    // GIAO DIỆN KHI ẤN NÚT SỬA INLINE (HỖ TRỢ TRẢI NGHIỆM TỐI ƯU)
+                    if (editingSubtaskTaskId === t.id && editingSubtaskId === s.id) {
+                        return `
+                            <div class="flex flex-col gap-1.5 p-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 rounded-xl text-[11px]">
+                                <input type="text" id="edit-subtext-${s.id}" value="${s.text}" class="w-full px-2 py-1 bg-white dark:bg-slate-900 border rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                                <div class="flex gap-2 items-center">
+                                    <input type="date" id="edit-subdate-${s.id}" value="${s.dueDate || ''}" class="px-2 py-1 bg-white dark:bg-slate-900 border rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 text-[10px] flex-1">
+                                    <button onclick="saveInlineSubtask('${t.id}', '${s.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold">Lưu</button>
+                                    <button onclick="cancelInlineSubtask()" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg">Hủy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // GIAO DIỆN HIỂN THỊ THƯỜNG / CÓ BÁO ĐỎ QUÁ HẠN VÀ KHÓA ĐỊNH DẠNG NGÀY VN
+                    return `
+                        <div class="flex flex-col p-2 ${overdue ? 'bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50' : 'bg-slate-50 dark:bg-slate-900/40 border border-transparent'} rounded-lg group text-[11px] relative">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="flex items-center gap-2 min-w-0 cursor-pointer flex-1">
+                                    <input type="checkbox" ${s.completed ? 'checked' : ''} onclick="handleToggleSubtask('${t.id}', '${s.id}')" class="rounded text-primary-600 border-slate-300 focus:ring-primary-500 w-3 h-3 shrink-0">
+                                    <span class="truncate ${s.completed ? 'line-through text-slate-400 dark:text-slate-500' : overdue ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300'}">${s.text}</span>
+                                </label>
+                                <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                    <button onclick="startEditSubtask('${t.id}', '${s.id}')" class="text-slate-400 hover:text-blue-500" title="Sửa việc con"><i data-lucide="edit-2" class="w-2.5 h-2.5"></i></button>
+                                    <button onclick="handleDeleteSubtask('${t.id}', '${s.id}')" class="text-slate-400 hover:text-rose-500" title="Xóa"><i data-lucide="trash-2" class="w-2.5 h-2.5"></i></button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 mt-1 text-[9px] pl-5">
+                                <i data-lucide="calendar" class="w-2.5 h-2.5 ${overdue ? 'text-rose-500' : 'text-slate-400'}"></i>
+                                <span class="${overdue ? 'text-rose-600 dark:text-rose-400 font-bold animate-pulse' : 'text-slate-400'}">
+                                    Hạn: ${formatDateVN(s.dueDate)} ${overdue ? '(Quá hạn!)' : ''}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            html += `
+                    </div>
+                    <div class="flex flex-col gap-1.5 mt-2 p-1.5 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/20">
+                        <input type="text" id="subtask-input-${t.id}" placeholder="Tên việc con cần làm..." class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[11px] focus:outline-none focus:border-primary-500">
+                        <div class="flex gap-1.5 justify-between items-center">
+                            <input type="date" id="subtask-date-${t.id}" class="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] text-slate-600 dark:text-slate-300 focus:outline-none focus:border-primary-500 flex-1">
+                            <button onclick="addSubTask('${t.id}')" class="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-[11px] font-bold shrink-0 flex items-center gap-0.5"><i data-lucide="plus" class="w-3 h-3"></i> Ghi việc</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function smartRender() {
+            updateGlobalData();
+            switch(activeTab) {
+                case 'dashboard': renderDashboard(); break;
+                case 'tasks': renderTasks(); break;
+                case 'companies': renderCompaniesView(); renderCategoryTasksSubPanel(); break;
+                case 'settings': renderSettingsTab(); break;
+            }
+            requestAnimationFrame(() => lucide.createIcons());
+        }
+
+        function renderDashboard() {
+            let totalAmount = 0, pending = 0, completed = 0, urgentTasks = [];
+            
+            state.tasks.forEach(t => {
+                totalAmount += Number(t.amount || 0);
+                if(t.status === 'pending') {
+                    pending++;
+                    if(t.priority === 'Cao') urgentTasks.push(t);
+                } else if (t.status === 'completed') {
+                    completed++;
+                }
+            });
+
+            const totalTasks = state.tasks.length;
+            const pct = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+
+            document.getElementById('stat-total-amount').innerText = totalAmount.toLocaleString('vi-VN') + ' ₫';
+            document.getElementById('stat-total-tasks').innerText = totalTasks;
+            document.getElementById('stat-pending-tasks').innerText = pending;
+            document.getElementById('stat-completed-tasks').innerText = completed;
+            document.getElementById('progress-percentage').innerText = pct + '%';
+            document.getElementById('progress-bar').style.width = pct + '%';
+
+            const urgentContainer = document.getElementById('dashboard-urgent-tasks');
+            if(urgentContainer) {
+                if(urgentTasks.length === 0) {
+                    urgentContainer.innerHTML = `<div class="text-center py-2 text-slate-400 text-xs">Không có đầu việc khẩn cấp.</div>`;
+                } else {
+                    urgentContainer.innerHTML = urgentTasks.map(t => `
+                        <div class="p-2.5 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-100 flex justify-between items-center text-xs">
+                            <span class="font-bold truncate max-w-[70%]">${t.title}</span>
+                            <span class="text-rose-600 font-extrabold">${Number(t.amount||0).toLocaleString('vi-VN')} ₫</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const projProgress = document.getElementById('dashboard-projects-progress');
+            if(projProgress) {
+                projProgress.innerHTML = state.companies.map(c => {
+                    const compTasks = state.tasks.filter(t => t.companyId === c.id);
+                    const compCompleted = compTasks.filter(t => t.status === 'completed').length;
+                    const compPct = compTasks.length > 0 ? Math.round((compCompleted / compTasks.length) * 100) : 0;
+                    return `
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between font-semibold">
+                                <span class="truncate">${c.name}</span>
+                                <span>${compPct}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-primary-500 h-full" style="width: ${compPct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function setTaskFilter(filter) {
+            currentFilter = filter;
+            const buttons = document.querySelectorAll('#task-filter-group button');
+            buttons.forEach(b => {
+                b.className = "flex items-center gap-2 py-1.5 px-3 rounded-md transition-all hover:text-slate-900 dark:hover:text-white";
+                const span = b.querySelector('span');
+                if(span) span.className = "bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-600 dark:text-slate-400 font-bold ml-0.5";
+            });
+
+            const targetBtn = document.querySelector(`#task-filter-group button[data-filter="${filter}"]`);
+            if (targetBtn) {
+                targetBtn.className = "flex items-center gap-2 py-1.5 px-3 rounded-md transition-all bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 font-semibold";
+                const targetSpan = targetBtn.querySelector('span');
+                if(targetSpan) targetSpan.className = "bg-emerald-200/60 dark:bg-emerald-800 px-1.5 py-0.5 rounded text-xs text-emerald-800 dark:text-emerald-200 font-bold ml-0.5";
+            }
+            smartRender();
+        }
+
+        function renderTasks() {
+            const search = document.getElementById('task-search-input').value.toLowerCase();
+            const sortOrder = document.getElementById('task-sort-select').value;
+            const container = document.getElementById('tasks-list');
+            if(!container) return;
+            
+            if (taskViewMode === 'grid') {
+                container.className = "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4";
+            } else {
+                container.className = "flex flex-col gap-3";
+            }
+
+            const companyMap = Object.fromEntries(state.companies.map(c => [c.id, c.name]));
+
+            let filtered = state.tasks.filter(t => {
+                const matchStr = t.title.toLowerCase().includes(search) || 
+                                 (t.notes && t.notes.toLowerCase().includes(search)) ||
+                                 (t.contractor && t.contractor.toLowerCase().includes(search));
+                if(currentFilter === 'pending') return matchStr && t.status === 'pending';
+                if(currentFilter === 'completed') return matchStr && t.status === 'completed';
+                if(currentFilter === 'urgent') return matchStr && t.priority === 'Cao' && t.status === 'pending';
+                return matchStr;
+            });
+
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.dueDate);
+                const dateB = new Date(b.dueDate);
+                return sortOrder === 'date-desc' ? dateB - dateA : dateA - dateB;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-6 text-xs">Không có hồ sơ nào tương ứng bộ lọc hiện tại.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                const compName = companyMap[t.companyId] || 'N/A';
+                const overdue = isOverdue(t.dueDate, t.status === 'completed');
+                
+                if (taskViewMode === 'grid') {
+                    return `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border ${overdue ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-slate-700'} flex flex-col justify-between shadow-sm hover:shadow transition-all">
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-2">
+                                    <span class="px-2 py-0.5 rounded font-bold ${t.priority==='Cao'?'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400':'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">${t.priority}</span>
+                                    <span class="font-bold ${t.status==='completed'?'text-emerald-600': overdue ? 'text-rose-600' : 'text-amber-500'}">
+                                        ${t.status==='completed'?'Đã hoàn thành': overdue ? 'Quá hạn xử lý' : 'Chờ xử lý'}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-sm mb-1 text-slate-900 dark:text-white line-clamp-1">${t.title}</h4>
+                                <p class="text-[10px] text-slate-400 mb-2 truncate">${compName} ${t.contractor ? `| Đối tác: ${t.contractor}` : ''}</p>
+                                <div class="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg mb-2 flex justify-between items-center border border-slate-100 dark:border-slate-800">
+                                    <span class="font-extrabold text-emerald-600">${Number(t.amount||0).toLocaleString('vi-VN')} ₫</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border dark:border-slate-700 font-semibold">${t.invoiceStatus}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">${t.notes || 'Không ghi chú.'}</p>
+                                
+                                ${getSubtaskHTMLBlock(t)}
+                            </div>
+                            <div class="border-t dark:border-slate-700 pt-2 mt-3 flex justify-between items-center text-[11px]">
+                                <span class="flex items-center gap-1 ${overdue ? 'text-rose-600 dark:text-rose-400 font-extrabold animate-pulse' : 'text-slate-400'}">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i> Hạn: ${formatDateVN(t.dueDate)} ${overdue ? '(Quá hạn)' : ''}
+                                </span>
+                                <div class="flex gap-2 text-slate-400">
+                                    <button onclick="editTask('${t.id}')" class="text-blue-500 hover:underline">Sửa</button>
+                                    <button onclick="deleteTask('${t.id}')" class="text-rose-500 hover:underline">Xóa</button>
+                                    ${t.status === 'pending' ? `<button onclick="quickComplete('${t.id}')" class="px-2 py-0.5 bg-primary-600 text-white rounded font-bold text-[10px]">Duyệt xong</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border ${overdue ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-slate-700'} flex flex-col shadow-sm hover:shadow transition-all gap-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div class="flex-1 min-w-0 space-y-1">
+                                    <div class="flex items-center gap-2 text-[10px]">
+                                        <span class="px-2 py-0.5 rounded font-bold ${t.priority==='Cao'?'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400':'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}">${t.priority}</span>
+                                        <span class="font-bold ${t.status==='completed'?'text-emerald-600': overdue ? 'text-rose-600' : 'text-amber-500'}">
+                                            ${t.status==='completed'?'Đã hoàn thành': overdue ? 'Quá hạn xử lý' : 'Chờ xử lý'}
+                                        </span>
+                                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                                        <span class="flex items-center gap-1 ${overdue ? 'text-rose-600 dark:text-rose-400 font-extrabold animate-pulse' : 'text-slate-400'}">
+                                            <i data-lucide="calendar" class="w-3 h-3"></i> Hạn: ${formatDateVN(t.dueDate)} ${overdue ? '(Quá hạn)' : ''}
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white truncate">${t.title}</h4>
+                                    <p class="text-[10px] text-slate-400 truncate">${compName} ${t.contractor ? `| Đối tác: ${t.contractor}` : ''}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">${t.notes || 'Không ghi chú.'}</p>
+                                </div>
+                                <div class="flex flex-row items-center justify-between sm:justify-end gap-4 shrink-0 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-700">
+                                    <div class="bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg flex flex-col items-start sm:items-end border border-slate-100 dark:border-slate-800 min-w-[140px]">
+                                        <span class="font-extrabold text-emerald-600 text-xs sm:text-sm">${Number(t.amount||0).toLocaleString('vi-VN')} ₫</span>
+                                        <span class="text-[9px] text-slate-400 font-semibold mt-0.5">${t.invoiceStatus}</span>
+                                    </div>
+                                    <div class="flex gap-3 text-[11px] shrink-0">
+                                        <button onclick="editTask('${t.id}')" class="text-blue-500 hover:underline">Sửa</button>
+                                        <button onclick="deleteTask('${t.id}')" class="text-rose-500 hover:underline">Xóa</button>
+                                        ${t.status === 'pending' ? `<button onclick="quickComplete('${t.id}')" class="px-2 py-0.5 bg-primary-600 text-white rounded font-bold text-[10px] shadow-sm">Duyệt xong</button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="max-w-2xl">
+                                ${getSubtaskHTMLBlock(t)}
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function selectCategoryToViewTasks(catId) {
+            selectedCategoryId = catId;
+            smartRender();
+        }
+
+        function renderCategoryTasksSubPanel() {
+            if (activeTab !== 'companies') return;
+
+            const titleEl = document.getElementById('selected-cat-name-title');
+            const countEl = document.getElementById('selected-cat-count');
+            const listContainer = document.getElementById('company-tasks-list');
+            if(!listContainer) return;
+
+            const targetCat = state.categories.find(c => c.id === selectedCategoryId);
+            if(!targetCat) {
+                titleEl.innerText = "Chọn một hạng mục nghiệp vụ";
+                countEl.innerText = "0 công việc";
+                listContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-6 text-xs italic">Vui lòng bấm chọn một hạng mục ở lưới phía trên để tra cứu hồ sơ.</div>`;
+                return;
+            }
+
+            titleEl.innerText = targetCat.name;
+            const subTasks = state.tasks.filter(t => t.companyId === selectedCompanyId && t.categoryId === selectedCategoryId);
+            countEl.innerText = `${subTasks.length} công việc`;
+
+            if(subTasks.length === 0) {
+                listContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-8 text-xs italic">Hạng mục này hiện tại không có đầu việc nào.</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = subTasks.map(t => {
+                const overdue = isOverdue(t.dueDate, t.status === 'completed');
+                return `
+                    <div class="p-4 bg-white dark:bg-slate-900 border ${overdue ? 'border-rose-400 ring-2 ring-rose-500/10 bg-rose-50/10' : 'border-slate-200 dark:border-slate-700'} rounded-xl shadow-sm hover:shadow-md transition-all space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] px-2 py-0.5 font-bold rounded ${t.priority === 'Cao' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}">${t.priority}</span>
+                            <span class="text-[10px] font-bold ${t.status === 'completed' ? 'text-emerald-600' : overdue ? 'text-rose-600' : 'text-amber-500'}">
+                                ${t.status === 'completed' ? 'Đã hoàn thành' : overdue ? 'Quá hạn' : 'Đang chờ'}
+                            </span>
+                        </div>
+                        
+                        <div>
+                            <h5 class="text-sm font-bold text-slate-900 dark:text-white">${t.title}</h5>
+                            ${t.contractor ? `<p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-0.5">Nhà thầu: ${t.contractor}</p>` : ''}
+                            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${t.notes || 'Không có ghi chú.'}</p>
+                            <p class="text-[10px] mt-2 ${overdue ? 'text-rose-600 dark:text-rose-400 font-bold animate-pulse' : 'text-slate-400'}">
+                                Hạn xử lý: ${formatDateVN(t.dueDate)}
+                            </p>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <span class="font-bold text-emerald-600 text-xs">${Number(t.amount || 0).toLocaleString('vi-VN')} ₫</span>
+                            
+                            <div class="flex gap-1 text-slate-400">
+                                <button onclick="editTask('${t.id}')" class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 rounded" title="Sửa">
+                                    <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="deleteTask('${t.id}')" class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 rounded" title="Xóa">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                                ${t.status === 'pending' ? `
+                                    <button onclick="quickComplete('${t.id}')" class="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-600 rounded" title="Đánh dấu hoàn thành">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCompaniesView() {
+            if (activeTab !== 'companies') return;
+
+            const listContainer = document.getElementById('company-tab-list');
+            const boardContainer = document.getElementById('company-categories-board');
+            
+            listContainer.innerHTML = state.companies.map(c => {
+                const isActive = selectedCompanyId === c.id;
+                const compTasksCount = state.tasks.filter(t => t.companyId === c.id).length;
+                return `
+                    <button onclick="selectedCompanyId='${c.id}'; selectedCategoryId=''; smartRender();" 
+                        class="px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5
+                        ${isActive ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'}">
+                        <span>${c.name}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${isActive ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}">${compTasksCount}</span>
+                    </button>
+                `;
+            }).join('');
+
+            const activeCategories = state.categories.filter(cat => cat.companyId === selectedCompanyId);
+
+            if (activeCategories.length === 0) {
+                boardContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-8 text-xs italic">Chưa có hạng mục nghiệp vụ nào được thiết lập.</div>`;
+                return;
+            }
+
+            boardContainer.innerHTML = activeCategories.map(cat => {
+                const tasksInCat = state.tasks.filter(t => t.companyId === selectedCompanyId && t.categoryId === cat.id);
+                const totalAmount = tasksInCat.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+                const isSelected = selectedCategoryId === cat.id;
+
+                return `
+                    <div onclick="selectCategoryToViewTasks('${cat.id}')" 
+                        class="p-5 rounded-2xl border bg-white dark:bg-slate-800 flex items-center justify-between cursor-pointer transition-all duration-150 hover:shadow-md hover:scale-[1.01]
+                        ${isSelected ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md dark:border-emerald-400' : 'border-slate-200 dark:border-slate-700 shadow-sm'}">
+                        <div class="flex items-start gap-3 min-w-0">
+                            <span class="w-3 h-3 rounded-full border mt-1 shrink-0 transition-colors ${isSelected ? 'bg-emerald-500 border-emerald-600' : 'bg-slate-100 border-slate-200 dark:bg-slate-700 dark:border-slate-600'}"></span>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm text-slate-900 dark:text-white truncate pr-2">${cat.name}</h4>
+                                <p class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">${totalAmount.toLocaleString('vi-VN')} ₫</p>
+                            </div>
+                        </div>
+                        <span class="bg-slate-50 dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 shrink-0">
+                            ${tasksInCat.length} việc
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSettingsTab() {
+            if (!configSelectedCompanyId && state.companies.length > 0) configSelectedCompanyId = state.companies[0].id;
+
+            const selectDropdown = document.getElementById('cfg-company-select');
+            if (selectDropdown) {
+                selectDropdown.innerHTML = state.companies.map(c => `<option value="${c.id}" ${c.id === configSelectedCompanyId ? 'selected' : ''}>${c.name}</option>`).join('');
+            }
+
+            const activeCompany = state.companies.find(c => c.id === configSelectedCompanyId);
+            const titleSpan = document.getElementById('cfg-selected-company-title');
+            if (titleSpan) titleSpan.innerText = activeCompany ? activeCompany.name : '...';
+
+            const compContainer = document.getElementById('cfg-companies-list');
+            if (compContainer) {
+                compContainer.innerHTML = state.companies.map(c => `
+                    <div class="group flex justify-between items-center px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-200 shadow-sm">
+                        <span class="truncate pr-2">${c.name}</span>
+                        <button onclick="deleteCompanyConfig('${c.id}')" class="text-rose-500 opacity-0 group-hover:opacity-100 hover:underline transition-opacity text-[11px] font-normal shrink-0">Xóa</button>
+                    </div>
+                `).join('');
+            }
+
+            const catContainer = document.getElementById('cfg-categories-grid');
+            if (catContainer) {
+                const displayCats = state.categories.filter(cat => cat.companyId === configSelectedCompanyId);
+                if (displayCats.length === 0) {
+                    catContainer.innerHTML = `<div class="col-span-2 text-center py-6 text-slate-400 text-xs italic">Chưa có hạng mục nào cho đơn vị này.</div>`;
+                } else {
+                    catContainer.innerHTML = displayCats.map(cat => `
+                        <div class="group flex justify-between items-center px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-xs text-slate-700 dark:text-slate-200 shadow-sm">
+                            <span class="truncate pr-2">${cat.name}</span>
+                            <button onclick="deleteCategoryConfig('${cat.id}')" class="text-rose-500 opacity-0 group-hover:opacity-100 hover:underline transition-opacity text-[11px] shrink-0">Xóa</button>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function onConfigCompanyChange() { configSelectedCompanyId = document.getElementById('cfg-company-select').value; smartRender(); }
+
+        function addCompanyConfig() {
+            const input = document.getElementById('cfg-company-input');
+            const name = input.value.trim();
+            if (!name) return;
+            const newCompany = { id: 'comp-' + Date.now(), name: name.toUpperCase() };
+            state.companies.push(newCompany);
+            configSelectedCompanyId = newCompany.id; 
+            selectedCompanyId = newCompany.id;
+            selectedCategoryId = ''; 
+            saveToLocalStorage(); input.value = ''; smartRender();
+        }
+
+        function addCategoryConfig() {
+            const input = document.getElementById('cfg-category-input');
+            const name = input.value.trim();
+            if (!name || !configSelectedCompanyId) return;
+            state.categories.push({ id: 'cat-' + Date.now(), name: name, companyId: configSelectedCompanyId });
+            saveToLocalStorage(); input.value = ''; smartRender();
+        }
+
+        function deleteCompanyConfig(id) {
+            if (confirm('Xóa công ty này sẽ xóa toàn bộ danh mục và công việc trực thuộc?')) {
+                state.companies = state.companies.filter(c => c.id !== id);
+                state.categories = state.categories.filter(cat => cat.companyId !== id);
+                state.tasks = state.tasks.filter(t => t.companyId !== id);
+                if (configSelectedCompanyId === id) configSelectedCompanyId = state.companies[0]?.id || '';
+                if (selectedCompanyId === id) selectedCompanyId = state.companies[0]?.id || '';
+                selectedCategoryId = '';
+                saveToLocalStorage(); smartRender();
+            }
+        }
+
+        function deleteCategoryConfig(id) {
+            if (confirm('Xóa hạng mục kiểm toán này?')) {
+                state.categories = state.categories.filter(cat => cat.id !== id);
+                state.tasks = state.tasks.filter(t => t.categoryId !== id);
+                if (selectedCategoryId === id) selectedCategoryId = '';
+                saveToLocalStorage(); smartRender();
+            }
+        }
+
+        function openQuickTaskModal() {
+            document.getElementById('form-task-id').value = '';
+            document.getElementById('task-form').reset();
+            const compSelect = document.getElementById('form-company');
+            compSelect.innerHTML = state.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+            updateFormCategories();
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function updateFormCategories() {
+            const compId = document.getElementById('form-company').value;
+            const catSelect = document.getElementById('form-category');
+            catSelect.innerHTML = state.categories.filter(cat => cat.companyId === compId).map(cat=>`<option value="${cat.id}">${cat.name}</option>`).join('');
+        }
+
+        function closeQuickTaskModal() { document.getElementById('task-modal').classList.add('hidden'); }
+
+        function saveTaskData(e) {
+            e.preventDefault();
+            const id = document.getElementById('form-task-id').value;
+            const existingTask = id ? state.tasks.find(t => t.id === id) : null;
+            
+            const target = {
+                id: id || 'task-' + Date.now(),
+                title: document.getElementById('form-title').value,
+                companyId: document.getElementById('form-company').value,
+                categoryId: document.getElementById('form-category').value,
+                amount: Number(document.getElementById('form-amount').value || 0),
+                dueDate: document.getElementById('form-date').value,
+                priority: document.getElementById('form-priority').value,
+                invoiceStatus: document.getElementById('form-invoice').value,
+                contractor: document.getElementById('form-contractor').value,
+                notes: document.getElementById('form-notes').value,
+                status: document.getElementById('form-status').value,
+                subtasks: existingTask ? (existingTask.subtasks || []) : []
+            };
+
+            if(id) {
+                const idx = state.tasks.findIndex(t=>t.id===id); state.tasks[idx] = target;
+            } else {
+                state.tasks.push(target);
+            }
+            saveToLocalStorage(); closeQuickTaskModal(); smartRender();
+        }
+
+        function editTask(id) {
+            const t = state.tasks.find(item => item.id === id); if(!t) return;
+            openQuickTaskModal();
+            document.getElementById('form-task-id').value = t.id;
+            document.getElementById('form-title').value = t.title;
+            document.getElementById('form-company').value = t.companyId;
+            updateFormCategories();
+            document.getElementById('form-category').value = t.categoryId;
+            document.getElementById('form-amount').value = t.amount;
+            document.getElementById('form-date').value = t.dueDate;
+            document.getElementById('form-priority').value = t.priority;
+            document.getElementById('form-invoice').value = t.invoiceStatus;
+            document.getElementById('form-status').value = t.status;
+            document.getElementById('form-contractor').value = t.contractor || '';
+            document.getElementById('form-notes').value = t.notes || '';
+        }
+
+        function deleteTask(id) {
+            if(confirm('Xóa hồ sơ này?')) { 
+                state.tasks = state.tasks.filter(t=>t.id!==id); 
+                saveToLocalStorage(); smartRender();
+            }
+        }
+
+        function quickComplete(id) {
+            const t = state.tasks.find(item => item.id === id); 
+            if(t) { t.status = 'completed'; saveToLocalStorage(); smartRender(); }
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 4));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `SO_NGHIEP_VU_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
+            dlAnchor.click();
+        }
+
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    const parsed = JSON.parse(reader.result);
+                    if(parsed.companies && parsed.tasks) {
+                        state = parsed; saveToLocalStorage();
+                        configSelectedCompanyId = state.companies[0]?.id || '';
+                        selectedCompanyId = state.companies[0]?.id || '';
+                        selectedCategoryId = '';
+                        smartRender();
+                        alert('Nhập tệp dữ liệu kế toán thành công!');
+                    } else { alert('Cấu trúc file JSON không phù hợp!'); }
+                } catch(e) { alert('Lỗi đọc tệp tin!'); }
+            };
+            if(event.target.files[0]) reader.readAsText(event.target.files[0]);
+        }
+
+        function resetToDefaultData() {
+            if(confirm('Xóa hết dữ liệu cấu hình để quay lại trạng thái mẫu ban đầu?')) {
+                state = JSON.parse(JSON.stringify(defaultData)); 
+                selectedCategoryId = '';
+                saveToLocalStorage(); 
+                smartRender();
+            }
+        }
+
+        window.onload = () => { smartRender(); };
+    </script>
+</body>
+</html>
